@@ -1,0 +1,12 @@
+/priv
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+/tmp
+erl_crash.dump
+porty-*.tar
+*.ez
+*.o
+
