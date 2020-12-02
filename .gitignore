@@ -1,3 +1,4 @@
+/.vscode
 /priv
 /_build/
 /cover/
@@ -9,4 +10,4 @@ erl_crash.dump
 porty-*.tar
 *.ez
 *.o
-
+log.txt

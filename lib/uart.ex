@@ -58,7 +58,7 @@ defmodule Uart do
     port =
       Port.open(
         {:spawn_executable, :code.priv_dir(:uart) ++ '/c/uart'},
-        [:exit_status, {:args, args}]
+        [:exit_status, :binary, {:args, args}]
       )
 
     {:noreply, %{state | port: port}}
@@ -66,7 +66,7 @@ defmodule Uart do
 
   @impl true
   def handle_info({_port, {:data, data}}, state = %{subscriber: subscriber}) do
-    IO.puts("from port: data: #{data}")
+    # IO.puts("from port: data: #{inspect data, base: :hex}")
 
     if subscriber do
       send(subscriber, {:data, data})

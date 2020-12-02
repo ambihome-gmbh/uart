@@ -3,8 +3,20 @@
 
 #include "log.h"
 
+#define UART_LOG_LEVEL LOG_TRACE
+
 void exit_with_status(int);
+void require(const bool condition, const int exit_status);
 int config_uart(int, char *argv[]);
+
+typedef struct
+{
+	char *uart_fn;
+	int speed;
+	int data_bits;
+	char parity;
+	int stop_bits;
+} uart_config_t;
 
 enum
 {

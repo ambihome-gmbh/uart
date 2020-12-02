@@ -5,17 +5,19 @@ minimal Elixir UART port.
 
 ## usage
 
-    {:ok, _} = Uart.start_link(['/dev/pts/1', '9600', '8', 'N', '1'])
-    :ok = Uart.subscribe()
-    ...
-    receive do
-      {:data, data} -> handle(data)
-      {:exit, exit_status} -> handle(exit_status)
-    end
-    ...
-    Uart.write("Hello, world!")
-    Uart.write(<< 0xDE, 0xAD, 0xBE, 0xEF >>)
-	
+```
+{:ok, _} = Uart.start_link(['/dev/pts/3', '9600', '8', 'N', '1'])
+:ok = Uart.subscribe()
+
+receive do
+	{:data, data} -> IO.inspect(data)
+	{:exit, exit_status} -> IO.inspect(exit_status)
+end
+...
+Uart.write("Hello, world!")
+Uart.write(<< 0xDE, 0xAD, 0xBE, 0xEF >>)
+```
+
 ## dev
 
 ### POSIX serial programming resources
@@ -28,35 +30,45 @@ minimal Elixir UART port.
 
 ### serial loopback
 
-	sudo apt install socat
-	sudo apt install minicom
+```
+sudo apt install socat
+sudo apt install minicom
 
-	socat -d -d pty,raw,echo=0 pty,raw,echo=0
+socat -d -d pty,raw,echo=0 pty,raw,echo=0
 
-	> sf@eternia:~/temp$ socat -d -d pty,raw,echo=0 pty,raw,echo=0
-	> 2020/11/24 19:38:59 socat[319915] N PTY is /dev/pts/4
-	> 2020/11/24 19:38:59 socat[319915] N PTY is /dev/pts/5
-	> 2020/11/24 19:38:59 socat[319915] N starting data transfer loop with FDs [5,5] and [7,7]
+sf@eternia:~/temp$ socat -d -d pty,raw,echo=0 pty,raw,echo=0
+> 2020/11/24 19:38:59 socat[319915] N PTY is /dev/pts/4
+> 2020/11/24 19:38:59 socat[319915] N PTY is /dev/pts/5
+> 2020/11/24 19:38:59 socat[319915] N starting data transfer loop with FDs [5,5] and [7,7]
 
-	minicom -D /dev/pts/4
-	minicom -D /dev/pts/5
+minicom -D /dev/pts/4
+minicom -D /dev/pts/5
+```
 
 ### write to stdin
 
 https://serverfault.com/a/443303
- 
-	mkfifo fifo
-	cat > fifo & 	# dummy process to keep the FIFO open 
-	fifo_cat_pid=$!
-	<program> < fifo
 
-	echo "Hello World" > fifo
+```
+mkfifo fifo
+cat > fifo & 	# dummy process to keep the FIFO open 
+fifo_cat_pid=$!
+<program> < fifo
 
-	// cleanup
-	kill $fifo_cat_pid
-	rm fifo
+echo "Hello World" > fifo
+
+// cleanup
+kill $fifo_cat_pid
+rm fifo
+```
 
 ### GenServer
 
 - https://hexdocs.pm/elixir/GenServer.html
 - https://elixir-lang.org/cheatsheets/gen-server.pdf
+
+
+###
+
+- how to handle parity errors? parity needed?
+
