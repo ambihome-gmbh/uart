@@ -22,8 +22,12 @@ defmodule Uart do
                  :ERR_ARG_STOP_BITS,
                  :ERR_CANT_OPEN_UART,
                  :ERR_USAGE,
-                 :ERR_READ_STDIN_FAILED,
-                 :ERR_READ_UART_FAILED
+                 :ERR_READ_STDIN_FAILED_,
+                 :ERR_READ_STDIN_FAILED_WRITE_ERROR,
+                 :ERR_READ_STDIN_FAILED_READ_ERROR,
+                 :ERR_READ_UART_FAILED_,
+                 :ERR_READ_UART_FAILED_WRITE_ERROR,
+                 :ERR_READ_UART_FAILED_READ_ERROR,
                ]
                |> Tool.enum()
 

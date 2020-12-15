@@ -5,20 +5,23 @@
 
 #include "uart.h"
 
+#define BAUD_MIN 1200
+#define BAUD_MAX 115200
+
 static int
 get_speed(int const speed)
 {
   switch (speed) {
-    case 1200:   return B1200;
-    case 1800:   return B1800;
-    case 2400:   return B2400;
-    case 4800:   return B4800;
-    case 9600:   return B9600;
-    case 19200:  return B19200;
-    case 38400:  return B38400;
-    case 57600:  return B57600;
+    case 1200: return B1200;
+    case 1800: return B1800;
+    case 2400: return B2400;
+    case 4800: return B4800;
+    case 9600: return B9600;
+    case 19200: return B19200;
+    case 38400: return B38400;
+    case 57600: return B57600;
     case 115200: return B115200;
-    default:     exit_with_status(ERR_ARG_SPEED);
+    default: exit_with_status(ERR_ARG_SPEED);
   }
 }
 
@@ -26,10 +29,10 @@ static int
 get_data_bits(int const data_bits)
 {
   switch (data_bits) {
-    case 5:  return CS5;
-    case 6:  return CS6;
-    case 7:  return CS7;
-    case 8:  return CS8;
+    case 5: return CS5;
+    case 6: return CS6;
+    case 7: return CS7;
+    case 8: return CS8;
     default: exit_with_status(ERR_ARG_DATA_BITS);
   }
 }
@@ -74,7 +77,7 @@ parse_config(uart_config_t* const config, int const argc, char* const argv[])
   require(argc == PAR_MAX, ERR_USAGE);
 
   config->uart_fn   = argv[PAR_UART_FN];
-  config->speed     = s2i(argv[PAR_SPEED], 1200, 115200, ERR_ARG_SPEED);
+  config->speed     = s2i(argv[PAR_SPEED], BAUD_MIN, BAUD_MAX, ERR_ARG_SPEED);
   config->data_bits = s2i(argv[PAR_DATA_BITS], 5, 8, ERR_ARG_DATA_BITS);
   config->parity    = argv[PAR_PARITY][0];
   config->stop_bits = s2i(argv[PAR_STOP_BITS], 1, 2, ERR_ARG_STOP_BITS);

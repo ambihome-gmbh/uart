@@ -39,11 +39,17 @@ init_logger()
 static void
 forward(int const from, int const to, int const err_code)
 {
-  static char buf[BUFSIZ];
-  size_t      size = read(from, buf, BUFSIZ);
-  
-  require(size > 0, err_code);
-  write(to, buf, size);
+  static char   buf[BUFSIZ];
+  ssize_t const size = read(from, buf, BUFSIZ);
+
+  require(size > 0, err_code + ERR_READ_ERROR_);
+
+  // TODO https://pubs.opengroup.org/onlinepubs/7908799/xsh/write.html
+  // 	If write() is interrupted by a signal before it writes any data,
+  // 	it will return -1 with errno set to [EINTR].
+  ssize_t const write_size = write(to, buf, size);
+
+  require(write_size == size, err_code + ERR_WRITE_ERROR_);
 }
 
 int
@@ -51,9 +57,10 @@ main(int argc, char* argv[])
 {
   init_logger();
 
-  f_uart       = config_uart(argc, argv);
-  int    maxfd = f_uart + 1;
-  fd_set fds;
+  f_uart = config_uart(argc, argv);
+
+  int const maxfd = f_uart + 1;
+  fd_set    fds;
 
   for (;;) {
     FD_ZERO(&fds);
@@ -63,10 +70,10 @@ main(int argc, char* argv[])
     select(maxfd, &fds, NULL, NULL, NULL);
 
     if (FD_ISSET(f_uart, &fds)) {
-      forward(f_uart, STDOUT_FILENO, ERR_READ_UART_FAILED);
+      forward(f_uart, STDOUT_FILENO, ERR_READ_UART_FAILED_);
     }
     if (FD_ISSET(STDIN_FILENO, &fds)) {
-      forward(STDIN_FILENO, f_uart, ERR_READ_STDIN_FAILED);
+      forward(STDIN_FILENO, f_uart, ERR_READ_STDIN_FAILED_);
     }
   }
 
