@@ -5,7 +5,7 @@ defmodule Porty.MixProject do
     [
       app: :uart,
       version: "0.1.0",
-      elixir: "~> 1.11",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers,
       deps: deps()
@@ -20,7 +20,7 @@ defmodule Porty.MixProject do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.4"}
+      {:elixir_make, "~> 0.6"}
     ]
   end
 end
