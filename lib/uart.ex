@@ -42,6 +42,10 @@ defmodule Uart do
     GenServer.call(__MODULE__, :subscribe)
   end
 
+  def subscribe(pid) do
+    GenServer.call(__MODULE__, {:subscribe, pid})
+  end
+
   # -------------------------------------------------------------------
 
   @impl true
@@ -96,6 +100,11 @@ defmodule Uart do
 
   @impl true
   def handle_call(:subscribe, {pid, _} = _from, state) do
+    {:reply, :ok, %{state | subscriber: pid}}
+  end
+
+  @impl true
+  def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscriber: pid}}
   end
 end
