@@ -15,6 +15,8 @@ defmodule Uart do
   alias Toolbox, as: Tool
   use GenServer
 
+  require Logger
+
   @exit_status [
                  :ERR_ARG_SPEED,
                  :ERR_ARG_DATA_BITS,
@@ -72,7 +74,7 @@ defmodule Uart do
 
   @impl true
   def handle_info({_port, {:data, data}}, state = %{subscriber: subscriber}) do
-    # IO.puts("from port: data: #{inspect data, base: :hex}")
+    Logger.debug("from port: data: #{inspect data, base: :hex}")
 
     if subscriber do
       send(subscriber, {:data, data})
@@ -83,7 +85,7 @@ defmodule Uart do
 
   @impl true
   def handle_info({_port, {:exit_status, exit_status}}, state = %{subscriber: subscriber}) do
-    IO.puts("from port: exit_status: #{@exit_status[exit_status]}")
+    Logger.info("from port: exit_status: #{@exit_status[exit_status]}")
 
     if subscriber do
       send(subscriber, {:exit, @exit_status[exit_status]})
