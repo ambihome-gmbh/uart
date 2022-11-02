@@ -8,7 +8,16 @@ defmodule Porty.MixProject do
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers,
-      deps: deps()
+      deps: deps(),
+      releases: [
+        uart_ex: [
+            applications: [uart: :permanent],
+            steps: [
+                :assemble
+            ],
+            include_erts: System.get_env("MIX_TARGET_INCLUDE_ERTS")
+        ],
+      ]
     ]
   end
 
