@@ -14,8 +14,16 @@ defmodule Uart do
 
   alias Toolbox, as: Tool
   use GenServer
+  use TypedStruct
 
   require Logger
+
+  typedstruct do
+    field(:port, port() | nil)
+    field(:subscriber, pid() | nil)
+    field(:args, [], enforce: true)
+    field(:buffer, [binary()], default: [])
+  end
 
   @exit_status [
                  :ERR_ARG_SPEED,
@@ -52,29 +60,22 @@ defmodule Uart do
 
   @impl true
   def init(args) do
-    state = %{
-      port: nil,
-      subscriber: nil,
-      args: args
-    }
-
-    {:ok, state, {:continue, :start_uart}}
+    {:ok, %Uart{args: args}, {:continue, :start_uart}}
   end
 
   @impl true
-  def handle_continue(:start_uart, state = %{args: args}) do
-    port =
-      Port.open(
-        {:spawn_executable, :code.priv_dir(:uart) ++ '/c/uart'},
-        [:exit_status, :binary, {:args, args}]
-      )
+  def handle_continue(:start_uart, state) do
+    state |> start_uart()
+  end
 
-    {:noreply, %{state | port: port}}
+  @impl true
+  def handle_info(:start_uart, state) do
+    state |> start_uart()
   end
 
   @impl true
   def handle_info({_port, {:data, data}}, state = %{subscriber: subscriber}) do
-    Logger.debug("from port: data: #{inspect data, base: :hex}")
+    Logger.debug("from port: data: #{inspect(data, base: :hex)}")
 
     if subscriber do
       send(subscriber, {:data, data})
@@ -95,6 +96,11 @@ defmodule Uart do
   end
 
   @impl true
+  def handle_cast({:write, data}, %{port: nil} = state) do
+    {:noreply, state |> Map.update!(:buffer, &List.insert_at(&1, -1, data))}
+  end
+
+  @impl true
   def handle_cast({:write, data}, %{port: port} = state) do
     Port.command(port, data)
     {:noreply, state}
@@ -108,5 +114,28 @@ defmodule Uart do
   @impl true
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscriber: pid}}
+  end
+
+  # privates
+  defp start_uart(state) do
+    args = state.args
+
+    port =
+      Port.open(
+        {:spawn_executable, :code.priv_dir(:uart) ++ '/c/uart'},
+        [:exit_status, :binary, {:args, args}]
+      )
+
+    if port != nil do
+      state.buffer |> Enum.each(&Port.command(port, &1))
+
+      {:noreply, %{state | port: port}}
+    else
+      Logger.warn("failed to open UART on\n#{inspect(args, pretty: true)}")
+
+      Process.send_after(self(), :start_uart, 2000)
+
+      {:noreply, state}
+    end
   end
 end

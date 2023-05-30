@@ -29,7 +29,8 @@ defmodule Porty.MixProject do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.6"}
+      {:elixir_make, "~> 0.6"},
+      {:typed_struct, "~> 0.3.0"}
     ]
   end
 end
