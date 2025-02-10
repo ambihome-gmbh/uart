@@ -8,6 +8,11 @@ defmodule Porty.MixProject do
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers,
+      make_clean: ["clean"],
+      make_executable: make_executable(),
+      make_makefile: "Makefile",
+      start_permanent: Mix.env() == :prod,
+      dialyzer: dialyzer(),
       deps: deps(),
       releases: [
         uart_ex: [
@@ -29,8 +34,25 @@ defmodule Porty.MixProject do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.6"},
+      {:elixir_make, "~> 0.9"},
       {:typed_struct, "~> 0.3.0"}
+    ]
+  end
+
+  defp make_executable do
+    case :os.type() do
+      {:win32, _} ->
+        "mingw32-make"
+
+      _ ->
+        :default
+    end
+  end
+
+  defp dialyzer() do
+    [
+      flags: [:missing_return, :extra_return, :unmatched_returns, :error_handling, :underspecs],
+      list_unused_filters: true
     ]
   end
 end
