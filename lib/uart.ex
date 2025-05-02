@@ -7,12 +7,12 @@ defmodule Uart do
 
   ## Example
 
-      {:ok, uart} = Uart.start_link(args: ['/dev/pts/1', '9600', '8', 'N', '1'])
+      {:ok, uart} = Uart.start_link(args: ["/dev/pts/1", "9600", "8", "N", "1"])
       :ok = Uart.subscribe(uart)
       ...
       receive do
-        {:data, data} -> handle(data)
-        {:exit, exit_status} -> handle(exit_status)
+        {:uart, :data, _path, data} -> handle(data)
+        {:uart, :exit, _path, exit_status} -> handle(exit_status)
       end
       ...
       Uart.write(uart, "Hello, world!")
@@ -90,7 +90,7 @@ defmodule Uart do
     Logger.debug("from port: data: #{inspect(data, base: :hex)}")
 
     if subscriber do
-      send(subscriber, {:data, data})
+      send(subscriber, {:uart, :data, hd(state.args), data})
     end
 
     {:noreply, state}
@@ -101,7 +101,7 @@ defmodule Uart do
     Logger.info("from port: exit_status: #{@exit_status[exit_status]}")
 
     if subscriber do
-      send(subscriber, {:exit, @exit_status[exit_status]})
+      send(subscriber, {:uart, :exit, hd(state.args), @exit_status[exit_status]})
     end
 
     {:noreply, %{state | port: nil}}

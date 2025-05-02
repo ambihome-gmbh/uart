@@ -5,12 +5,12 @@ minimal Elixir UART port.
 ## usage
 
 ```
-{:ok, uart} = Uart.start_link(args: ['/dev/pts/3', '9600', '8', 'N', '1'])
+{:ok, uart} = Uart.start_link(args: ["/dev/pts/3", "9600", "8", "N", "1"])
 :ok = Uart.subscribe(uart)
 
 receive do
-	{:data, data} -> IO.inspect(data)
-	{:exit, exit_status} -> IO.inspect(exit_status)
+  {:uart, :data, _path, data} -> handle(data)
+  {:uart, :exit, _path, exit_status} -> handle(exit_status)
 end
 ...
 Uart.write(uart, "Hello, world!")
@@ -64,7 +64,7 @@ sf adm dialout cdrom sudo dip plugdev lpadmin lxd sambashare docker
 now you can connect with
 
 ```
-{:ok, _} = Uart.start_link(args: ['/dev/ttyUSB0', '19200', '8', 'N', '1'])
+{:ok, _} = Uart.start_link(args: ["/dev/ttyUSB0", "19200", "8", "N", "1"])
 #                                 ^^^^^^^
 ```
 
