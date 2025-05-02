@@ -1,4 +1,3 @@
-
 # uart
 
 minimal Elixir UART port.
@@ -6,16 +5,16 @@ minimal Elixir UART port.
 ## usage
 
 ```
-{:ok, _} = Uart.start_link(['/dev/pts/3', '9600', '8', 'N', '1'])
-:ok = Uart.subscribe()
+{:ok, uart} = Uart.start_link(args: ['/dev/pts/3', '9600', '8', 'N', '1'])
+:ok = Uart.subscribe(uart)
 
 receive do
 	{:data, data} -> IO.inspect(data)
 	{:exit, exit_status} -> IO.inspect(exit_status)
 end
 ...
-Uart.write("Hello, world!")
-Uart.write(<< 0xDE, 0xAD, 0xBE, 0xEF >>)
+Uart.write(uart, "Hello, world!")
+Uart.write(uart, << 0xDE, 0xAD, 0xBE, 0xEF >>)
 ```
 
 ### usage with FTDI serial cable
@@ -28,7 +27,7 @@ dmesg
 #																	     ^^^^^^^
 ```
 
-the device is owned by `root` and group `dialout`. 
+the device is owned by `root` and group `dialout`.
 
 ```
 sf@grayskull:~$ ls -al /dev/ttyUSB0
@@ -63,8 +62,9 @@ sf adm dialout cdrom sudo dip plugdev lpadmin lxd sambashare docker
 (if still not in group, try a restart)
 
 now you can connect with
+
 ```
-{:ok, _} = Uart.start_link(['/dev/ttyUSB0', '19200', '8', 'N', '1'])
+{:ok, _} = Uart.start_link(args: ['/dev/ttyUSB0', '19200', '8', 'N', '1'])
 #                                 ^^^^^^^
 ```
 
@@ -80,11 +80,12 @@ usb-devices
 
 ### example usage with knex-datalink
 
- (byte-stuffed) CEMI-frame
+(byte-stuffed) CEMI-frame
+
 ```
 		11 AA 00 BC E0 FF FF AA 00 01 01 AA 00 80 00
 ESC        ^^                ^^          ^^
-END                                               ^^ 		
+END                                               ^^
 ```
 
 ```
@@ -100,7 +101,6 @@ Uart.write(frame)
 - https://tldp.org/HOWTO/Serial-Programming-HOWTO/x115.html#AEN125
 - https://tldp.org/HOWTO/Serial-HOWTO.html
 - https://stackoverflow.com/questions/25996171/linux-blocking-vs-non-blocking-serial-read
-
 
 ### serial loopback
 
@@ -125,7 +125,7 @@ https://serverfault.com/a/443303
 
 ```
 mkfifo fifo
-cat > fifo & 	# dummy process to keep the FIFO open 
+cat > fifo & 	# dummy process to keep the FIFO open
 fifo_cat_pid=$!
 <program> < fifo
 
@@ -141,8 +141,6 @@ rm fifo
 - https://hexdocs.pm/elixir/GenServer.html
 - https://elixir-lang.org/cheatsheets/gen-server.pdf
 
-
 ###
 
 - how to handle parity errors? parity needed?
-
