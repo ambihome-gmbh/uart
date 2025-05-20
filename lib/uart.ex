@@ -1,15 +1,23 @@
 defmodule Uart do
   @moduledoc """
-    {:ok, _} = Uart.start_link(['/dev/pts/1', '9600', '8', 'N', '1'])
-    :ok = Uart.subscribe()
-    ...
-    receive do
-      {:data, data} -> handle(data)
-      {:exit, exit_status} -> handle(exit_status)
-    end
-    ...
-    Uart.write("Hello, world!")
-    Uart.write(<< 0xDE, 0xAD, 0xBE, 0xEF >>)
+  Handles communication with a UART socket.
+
+  Compiles and ships a small C program as an intermediate, which is communicated
+  with as a `Port` from elixir.
+
+  ## Example
+
+      {:ok, uart} = Uart.start_link(args: ["/dev/pts/1", "9600", "8", "N", "1"])
+      :ok = Uart.subscribe(uart)
+      ...
+      receive do
+        {:uart, :data, _path, data} -> handle(data)
+        {:uart, :exit, _path, exit_status} -> handle(exit_status)
+      end
+      ...
+      Uart.write(uart, "Hello, world!")
+      Uart.write(uart, << 0xDE, 0xAD, 0xBE, 0xEF >>)
+
   """
 
   alias Toolbox, as: Tool
@@ -39,27 +47,31 @@ defmodule Uart do
                ]
                |> Tool.enum()
 
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+  def start_link(init_arg) do
+    {opts, init_arg} = Keyword.split(init_arg, [:name])
+    GenServer.start_link(__MODULE__, init_arg, opts)
   end
 
-  @spec write(binary()) :: :ok
-  def write(data) do
-    GenServer.cast(__MODULE__, {:write, data})
+  @spec write(GenServer.server(), binary()) :: :ok
+  def write(server, data) do
+    GenServer.cast(server, {:write, data})
   end
 
-  def subscribe() do
-    GenServer.call(__MODULE__, :subscribe)
+  @spec subscribe(GenServer.server()) :: :ok
+  def subscribe(server) do
+    GenServer.call(server, :subscribe)
   end
 
-  def subscribe(pid) do
-    GenServer.call(__MODULE__, {:subscribe, pid})
+  @spec subscribe(GenServer.server(), pid()) :: :ok
+  def subscribe(server, pid \\ self()) do
+    GenServer.call(server, {:subscribe, pid})
   end
 
   # -------------------------------------------------------------------
 
   @impl true
-  def init(args) do
+  def init(init_arg) do
+    args = Keyword.fetch!(init_arg, :args)
     {:ok, %Uart{args: args}, {:continue, :start_uart}}
   end
 
@@ -78,7 +90,7 @@ defmodule Uart do
     Logger.debug("from port: data: #{inspect(data, base: :hex)}")
 
     if subscriber do
-      send(subscriber, {:data, data})
+      send(subscriber, {:uart, :data, hd(state.args), data})
     end
 
     {:noreply, state}
@@ -89,7 +101,7 @@ defmodule Uart do
     Logger.info("from port: exit_status: #{@exit_status[exit_status]}")
 
     if subscriber do
-      send(subscriber, {:exit, @exit_status[exit_status]})
+      send(subscriber, {:uart, :exit, hd(state.args), @exit_status[exit_status]})
     end
 
     {:noreply, %{state | port: nil}}
