@@ -43,18 +43,14 @@ defmodule Porty.MixProject do
   defp make_env do
     case :os.type() do
       {:unix, :darwin} ->
-        # 1. Dynamically find the Homebrew prefix
-        {brew_prefix, 0} = System.cmd("brew", ["--prefix"], stderr_to_stdout: true)
-        libbsd_path = "#{String.trim(brew_prefix)}/opt/libbsd"
+        libbsd_path = "/opt/homebrew/opt/libbsd"
 
-        # 2. Check if the directory exists
         if File.dir?(libbsd_path) do
           %{
             "CPPFLAGS" => "-I#{libbsd_path}/include",
             "LDFLAGS" => "-L#{libbsd_path}/lib"
           }
         else
-          # 3. Raise an error for the user
           Mix.raise """
           \n[Missing Dependency] libbsd was not found at #{libbsd_path}.
           Since you are on macOS, this library is required for compilation.
