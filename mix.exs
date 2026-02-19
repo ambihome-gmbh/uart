@@ -8,6 +8,7 @@ defmodule Porty.MixProject do
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers,
+      make_env: make_env(),
       make_clean: ["clean"],
       make_executable: make_executable(),
       make_makefile: "Makefile",
@@ -38,6 +39,34 @@ defmodule Porty.MixProject do
       {:typed_struct, "~> 0.3.0"}
     ]
   end
+
+  defp make_env do
+    case :os.type() do
+      {:unix, :darwin} ->
+        {prefix, 0} = System.cmd("brew", "--prefix")
+        libbsd_path = Path.join(prefix, "opt/libbsd")
+
+        if File.dir?(libbsd_path) do
+          %{
+            "CPPFLAGS" => "-I#{libbsd_path}/include",
+            "LDFLAGS" => "-L#{libbsd_path}/lib"
+          }
+        else
+          Mix.raise """
+          \n[Missing Dependency] libbsd was not found at #{libbsd_path}.
+          Since you are on macOS, this library is required for compilation.
+
+          Please install it using Homebrew:
+              brew install libbsd
+          """
+        end
+
+      _ ->
+        # Default for Linux or other Unix systems
+        %{}
+    end
+  end
+
 
   defp make_executable do
     case :os.type() do
