@@ -43,8 +43,8 @@ defmodule Porty.MixProject do
   defp make_env do
     case :os.type() do
       {:unix, :darwin} ->
-        {prefix, 0} = System.cmd("brew", "--prefix")
-        libbsd_path = Path.join(prefix, "opt/libbsd")
+        {prefix, 0} = System.cmd("brew", ["--prefix"])
+        libbsd_path = Path.join(String.trim(prefix), "opt/libbsd")
 
         if File.dir?(libbsd_path) do
           %{
