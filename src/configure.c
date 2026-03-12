@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 
 #include "uart.h"
 
@@ -64,7 +65,6 @@ set_options(struct termios* const options, uart_config_t const* const config)
 static int
 s2i(char const* const arg, int const min, int const max, int const err_code)
 {
-
   char *end;
   long result = strtol(arg, &end, 10);
 
@@ -103,6 +103,7 @@ config_uart(int argc, char* argv[])
 
   int f_uart = open(config.uart_fn, O_RDWR | O_NOCTTY);
   require(f_uart > 0, ERR_CANT_OPEN_UART);
+  ioctl(f_uart, TIOCEXCL);
   tcflush(f_uart, TCIFLUSH);
 
   {

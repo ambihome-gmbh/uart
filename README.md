@@ -135,12 +135,3 @@ echo "Hello World" > fifo
 kill $fifo_cat_pid
 rm fifo
 ```
-
-### GenServer
-
-- https://hexdocs.pm/elixir/GenServer.html
-- https://elixir-lang.org/cheatsheets/gen-server.pdf
-
-### todo
-
-- [ ] consider `O_NONBLOCK` or `VTIME`/`VMIN` termios settings to avoid blocking reads
