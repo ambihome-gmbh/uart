@@ -141,6 +141,14 @@ rm fifo
 - https://hexdocs.pm/elixir/GenServer.html
 - https://elixir-lang.org/cheatsheets/gen-server.pdf
 
-###
+### todo
 
-- how to handle parity errors? parity needed?
+- [ ] mark `exit_with_status` as `_Noreturn` (C11) to silence `-Wreturn-type` warnings in `get_speed()` / `get_data_bits()`
+- [ ] use `init_logger(void)` instead of `init_logger()` — empty parens mean unspecified params in C99
+- [ ] replace `__UART_H_DEFINED__` include guard with `UART_H` — double-underscore identifiers are reserved by the C standard
+- [ ] make `log.txt` path configurable (env var or `/tmp`) instead of hardcoded CWD
+- [ ] add `$(CFLAGS)` to the Makefile link step so `-g` actually applies
+- [ ] add a `strtol` fallback for systems without `libbsd` / `<bsd/stdlib.h>`
+- [ ] consider `O_NONBLOCK` or `VTIME`/`VMIN` termios settings to avoid blocking reads
+- [ ] update vendored `rxi/log.c` (currently v0.1.0)
+- [ ] handle parity errors?

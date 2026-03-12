@@ -1,5 +1,6 @@
 #include "uart.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <sys/select.h>
 #include <unistd.h>
@@ -10,7 +11,7 @@ void
 exit_with_status(int const exit_status)
 {
   log_error("exit(%d)", exit_status);
-  if (f_uart) {
+  if (f_uart >= 0) {
     close(f_uart);
   }
   exit(exit_status);
@@ -44,12 +45,16 @@ forward(int const from, int const to, int const err_code)
 
   require(size > 0, err_code + ERR_READ_ERROR_);
 
-  // TODO https://pubs.opengroup.org/onlinepubs/7908799/xsh/write.html
-  // 	If write() is interrupted by a signal before it writes any data,
-  // 	it will return -1 with errno set to [EINTR].
-  ssize_t const write_size = write(to, buf, size);
-
-  require(write_size == size, err_code + ERR_WRITE_ERROR_);
+  ssize_t written = 0;
+  while (written < size) {
+    ssize_t const n = write(to, buf + written, size - written);
+    if (n < 0) {
+      if (errno == EINTR)
+        continue;
+      require(false, err_code + ERR_WRITE_ERROR_);
+    }
+    written += n;
+  }
 }
 
 int
@@ -59,18 +64,19 @@ main(int argc, char* argv[])
 
   f_uart = config_uart(argc, argv);
 
-  int const maxfd = f_uart + 1;
-  fd_set    fds;
+  int const maxfd = (f_uart > STDIN_FILENO ? f_uart : STDIN_FILENO) + 1;
+  fd_set fds;
 
   for (;;) {
     FD_ZERO(&fds);
     FD_SET(f_uart, &fds);
     FD_SET(STDIN_FILENO, &fds);
 
-    select(maxfd, &fds, NULL, NULL, NULL);
+    if (select(maxfd, &fds, NULL, NULL, NULL) < 0)
+      continue;
 
     if (FD_ISSET(f_uart, &fds)) {
-      forward(f_uart, STDOUT_FILENO, ERR_FWD_STDIN_FAILED_);
+      forward(f_uart, STDOUT_FILENO, ERR_FWD_UART_FAILED_);
     }
     if (FD_ISSET(STDIN_FILENO, &fds)) {
       forward(STDIN_FILENO, f_uart, ERR_FWD_STDIN_FAILED_);

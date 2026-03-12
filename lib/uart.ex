@@ -20,7 +20,6 @@ defmodule Uart do
 
   """
 
-  alias Toolbox, as: Tool
   use GenServer
   use TypedStruct
 
@@ -45,7 +44,9 @@ defmodule Uart do
                  :ERR_FWD_UART_READ_FAILED,
                  :ERR_FWD_UART_WRITE_FAILED
                ]
-               |> Tool.enum()
+               |> Enum.with_index(1)
+               |> Enum.map(fn {k, v} -> {v, k} end)
+               |> Map.new()
 
   def start_link(init_arg) do
     {opts, init_arg} = Keyword.split(init_arg, [:name])
@@ -60,11 +61,6 @@ defmodule Uart do
   @spec subscribe(GenServer.server()) :: :ok
   def subscribe(server) do
     GenServer.call(server, :subscribe)
-  end
-
-  @spec subscribe(GenServer.server(), pid()) :: :ok
-  def subscribe(server, pid \\ self()) do
-    GenServer.call(server, {:subscribe, pid})
   end
 
   # -------------------------------------------------------------------
@@ -128,26 +124,25 @@ defmodule Uart do
     {:reply, :ok, %{state | subscriber: pid}}
   end
 
-  # privates
   defp start_uart(state) do
     args = state.args
 
-    port =
-      Port.open(
-        {:spawn_executable, :code.priv_dir(:uart) ++ '/c/uart'},
-        [:exit_status, :binary, {:args, args}]
-      )
+    try do
+      port =
+        Port.open(
+          {:spawn_executable, :code.priv_dir(:uart) ++ ~c"/c/uart"},
+          [:exit_status, :binary, {:args, args}]
+        )
 
-    if port != nil do
       state.buffer |> Enum.each(&Port.command(port, &1))
 
-      {:noreply, %{state | port: port}}
-    else
-      Logger.warn("failed to open UART on\n#{inspect(args, pretty: true)}")
+      {:noreply, %{state | port: port, buffer: []}}
+    rescue
+      e ->
+        Logger.warning("failed to open UART on #{inspect(args, pretty: true)}: #{inspect(e)}")
+        Process.send_after(self(), :start_uart, 2000)
 
-      Process.send_after(self(), :start_uart, 2000)
-
-      {:noreply, state}
+        {:noreply, state}
     end
   end
 end

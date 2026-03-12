@@ -7,7 +7,7 @@
 /.fetch
 /tmp
 erl_crash.dump
-porty-*.tar
+uart-*.tar
 *.ez
 *.o
 log.txt
