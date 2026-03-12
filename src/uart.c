@@ -7,7 +7,7 @@
 
 static int f_uart = -1;
 
-void
+_Noreturn void
 exit_with_status(int const exit_status)
 {
   log_error("exit(%d)", exit_status);
@@ -30,7 +30,10 @@ require(bool const condition, int const exit_status)
 static void
 init_logger()
 {
-  FILE* f_log = fopen("log.txt", "w");
+  const char* log_path = getenv("UART_LOG_PATH");
+  if (log_path == NULL)
+    log_path = "/tmp/uart.log";
+  FILE* f_log = fopen(log_path, "w");
   log_set_quiet(true);
   if (f_log != NULL) {
     log_add_fp(f_log, UART_LOG_LEVEL);

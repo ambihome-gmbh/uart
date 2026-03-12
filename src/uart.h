@@ -1,11 +1,11 @@
-#ifndef __UART_H_DEFINED__
-#define __UART_H_DEFINED__
+#ifndef _UART_H_DEFINED_
+#define _UART_H_DEFINED_
 
 #include "log.h"
 
 #define UART_LOG_LEVEL LOG_TRACE
 
-void
+_Noreturn void
 exit_with_status(int);
 
 void
