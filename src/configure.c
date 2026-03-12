@@ -1,5 +1,5 @@
-#include <bsd/stdlib.h> // NOTE: sudo apt-get install libbsd-dev
 #include <fcntl.h>
+#include <stdlib.h>
 #include <strings.h>
 #include <termios.h>
 
@@ -64,11 +64,12 @@ set_options(struct termios* const options, uart_config_t const* const config)
 static int
 s2i(char const* const arg, int const min, int const max, int const err_code)
 {
-  const char* err;
-  int         result = (int)strtonum(arg, min, max, &err);
 
-  require(err == NULL, err_code);
-  return result;
+  char *end;
+  long result = strtol(arg, &end, 10);
+
+  require(*end == '\0' && result >= min && result <= max, err_code);
+  return (int)result;
 }
 
 static void

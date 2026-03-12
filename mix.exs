@@ -39,32 +39,7 @@ defmodule Uart.MixProject do
     ]
   end
 
-  defp make_env do
-    case :os.type() do
-      {:unix, :darwin} ->
-        {prefix, 0} = System.cmd("brew", ["--prefix"])
-        libbsd_path = Path.join(String.trim(prefix), "opt/libbsd")
-
-        if File.dir?(libbsd_path) do
-          %{
-            "CPPFLAGS" => "-I#{libbsd_path}/include",
-            "LDFLAGS" => "-L#{libbsd_path}/lib"
-          }
-        else
-          Mix.raise("""
-          \n[Missing Dependency] libbsd was not found at #{libbsd_path}.
-          Since you are on macOS, this library is required for compilation.
-
-          Please install it using Homebrew:
-              brew install libbsd
-          """)
-        end
-
-      _ ->
-        # Default for Linux or other Unix systems
-        %{}
-    end
-  end
+  defp make_env, do: %{}
 
   defp make_executable do
     case :os.type() do
