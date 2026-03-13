@@ -17,6 +17,9 @@ Uart.write(uart, "Hello, world!")
 Uart.write(uart, << 0xDE, 0xAD, 0xBE, 0xEF >>)
 ```
 
+To enable logging of the C program, set the environment variable `UART_LOG_PATH` to a file path.
+
+
 ### usage with FTDI serial cable
 
 plug in cable, then check `dmesg`

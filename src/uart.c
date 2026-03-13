@@ -30,10 +30,10 @@ require(bool const condition, int const exit_status)
 static void
 init_logger()
 {
-  const char* log_path = getenv("UART_LOG_PATH");
-  if (log_path == NULL) { log_path = "/tmp/uart.log"; }
-  FILE* f_log = fopen(log_path, "w");
   log_set_quiet(true);
+  const char* log_path = getenv("UART_LOG_PATH");
+  if (log_path == NULL) { return; }
+  FILE* f_log = fopen(log_path, "w");
   if (f_log != NULL) { log_add_fp(f_log, UART_LOG_LEVEL); }
 }
 

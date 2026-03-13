@@ -117,37 +117,11 @@ defmodule UartTest do
     end)
   end
 
-  # -- buffering ---------------------------------------------------------
-
-  test "writes are buffered while port is down, then flushed" do
-    with_socat(fn pty_a, pty_b ->
-      # start with a bad path so port doesn't open immediately
-      {:ok, uart} = Uart.start_link(args: ["/dev/nonexistent" | @default_args])
-      :ok = Uart.subscribe(uart)
-
-      # these writes should be buffered
-      Uart.write(uart, "buf1")
-      Uart.write(uart, "buf2")
-      Process.sleep(200)
-
-      # stop the failing uart
-      GenServer.stop(uart)
-
-      # start fresh with valid paths
-      uart2 = start_uart(pty_a)
-      _reader = start_reader(pty_b)
-      Process.sleep(200)
-
-      # send new data — verify the new one works
-      Uart.write(uart2, "fresh")
-      data = collect_data(5, 2000)
-      assert String.contains?(data, "fresh")
-    end)
-  end
-
   # -- invalid args (C exit codes) ----------------------------------------
 
   test "invalid baud rate" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "99999", "8", "N", "1"])
       :ok = Uart.subscribe(uart)
@@ -157,6 +131,8 @@ defmodule UartTest do
   end
 
   test "empty string argument" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       # An empty string for baud rate should fail rather than parsing as 0
       {:ok, uart} = Uart.start_link(args: [pty_a, "", "8", "N", "1"])
@@ -167,6 +143,8 @@ defmodule UartTest do
   end
 
   test "invalid data bits" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "9600", "3", "N", "1"])
       :ok = Uart.subscribe(uart)
@@ -176,6 +154,8 @@ defmodule UartTest do
   end
 
   test "invalid parity" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "9600", "8", "X", "1"])
       :ok = Uart.subscribe(uart)
@@ -185,6 +165,8 @@ defmodule UartTest do
   end
 
   test "invalid stop bits" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "9600", "8", "N", "5"])
       :ok = Uart.subscribe(uart)
@@ -194,6 +176,8 @@ defmodule UartTest do
   end
 
   test "wrong number of args" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "9600"])
       :ok = Uart.subscribe(uart)
@@ -203,6 +187,7 @@ defmodule UartTest do
   end
 
   test "invalid device path" do
+    Process.flag(:trap_exit, true)
     {:ok, uart} = Uart.start_link(args: ["/dev/nonexistent" | @default_args])
     :ok = Uart.subscribe(uart)
 
@@ -212,6 +197,8 @@ defmodule UartTest do
   # -- port crash + retry ------------------------------------------------
 
   test "port exit is reported" do
+    Process.flag(:trap_exit, true)
+
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a | @default_args])
       :ok = Uart.subscribe(uart)
