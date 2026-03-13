@@ -66,8 +66,12 @@ s2i(char const* const arg, int const min, int const max, int const err_code)
 {
   char *end;
   long result = strtol(arg, &end, 10);
-
-  require(*end == '\0' && result >= min && result <= max, err_code);
+  require(
+    /* catches empty strings where result is 0 */
+    end != arg && 
+    /* catches non-numbers, that is end points to something else than '\0' */
+    *end == '\0' 
+    && result >= min && result <= max, err_code);
   return (int)result;
 }
 
@@ -101,14 +105,17 @@ config_uart(int argc, char* argv[])
   parse_config(&config, argc, argv);
 
   int f_uart = open(config.uart_fn, O_RDWR | O_NOCTTY);
-  require(f_uart > 0, ERR_CANT_OPEN_UART);
+  require(f_uart >= 0, ERR_CANT_OPEN_UART);
   ioctl(f_uart, TIOCEXCL);
   tcflush(f_uart, TCIFLUSH);
 
   {
-    struct termios options = { 0 };
-    set_options(&options, &config);
-    tcsetattr(f_uart, TCSANOW, &options);
+    struct termios options;
+    if (tcgetattr(f_uart, &options) == 0) {
+      cfmakeraw(&options); 
+      set_options(&options, &config);
+      tcsetattr(f_uart, TCSANOW, &options);
+    }
   }
 
   return f_uart;

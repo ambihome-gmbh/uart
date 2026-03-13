@@ -156,6 +156,16 @@ defmodule UartTest do
     end)
   end
 
+  test "empty string argument" do
+    with_socat(fn pty_a, _pty_b ->
+      # An empty string for baud rate should fail rather than parsing as 0
+      {:ok, uart} = Uart.start_link(args: [pty_a, "", "8", "N", "1"])
+      :ok = Uart.subscribe(uart)
+
+      assert_receive {:uart, :exit, _path, :ERR_ARG_SPEED}, 2000
+    end)
+  end
+
   test "invalid data bits" do
     with_socat(fn pty_a, _pty_b ->
       {:ok, uart} = Uart.start_link(args: [pty_a, "9600", "3", "N", "1"])

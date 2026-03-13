@@ -21,16 +21,9 @@ defmodule Uart do
   """
 
   use GenServer
-  use TypedStruct
-
   require Logger
 
-  typedstruct do
-    field(:port, port() | nil)
-    field(:subscriber, pid() | nil)
-    field(:args, [], enforce: true)
-    field(:buffer, [binary()], default: [])
-  end
+  defstruct port: nil, subscriber: nil, args: []
 
   @exit_status [
                  :ERR_ARG_SPEED,
@@ -100,12 +93,14 @@ defmodule Uart do
       send(subscriber, {:uart, :exit, hd(state.args), @exit_status[exit_status]})
     end
 
+    Process.send_after(self(), :start_uart, 2000)
+
     {:noreply, %{state | port: nil}}
   end
 
   @impl true
-  def handle_cast({:write, data}, %{port: nil} = state) do
-    {:noreply, state |> Map.update!(:buffer, &List.insert_at(&1, -1, data))}
+  def handle_cast({:write, _data}, %{port: nil} = state) do
+    {:noreply, state}
   end
 
   @impl true
@@ -119,11 +114,6 @@ defmodule Uart do
     {:reply, :ok, %{state | subscriber: pid}}
   end
 
-  @impl true
-  def handle_call({:subscribe, pid}, _from, state) do
-    {:reply, :ok, %{state | subscriber: pid}}
-  end
-
   defp start_uart(state) do
     args = state.args
 
@@ -134,9 +124,7 @@ defmodule Uart do
           [:exit_status, :binary, {:args, args}]
         )
 
-      state.buffer |> Enum.each(&Port.command(port, &1))
-
-      {:noreply, %{state | port: port, buffer: []}}
+      {:noreply, %{state | port: port}}
     rescue
       e ->
         Logger.warning("failed to open UART on #{inspect(args, pretty: true)}: #{inspect(e)}")

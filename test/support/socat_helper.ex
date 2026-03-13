@@ -27,6 +27,12 @@ defmodule SocatHelper do
   Stops a socat process.
   """
   def stop(port) do
+    if info = Port.info(port) do
+      if os_pid = Keyword.get(info, :os_pid) do
+        System.cmd("kill", ["-9", to_string(os_pid)])
+      end
+    end
+
     Port.close(port)
   catch
     _, _ -> :ok

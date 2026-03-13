@@ -11,3 +11,4 @@ uart-*.tar
 *.ez
 *.o
 log.txt
+.elixir_ls/

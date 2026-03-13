@@ -35,8 +35,7 @@ defmodule Uart.MixProject do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.9"},
-      {:typed_struct, "~> 0.3.0"}
+      {:elixir_make, "~> 0.9"}
     ]
   end
 
@@ -47,11 +46,8 @@ defmodule Uart.MixProject do
 
   defp make_executable do
     case :os.type() do
-      {:win32, _} ->
-        "mingw32-make"
-
-      _ ->
-        :default
+      {:win32, _} -> raise("better not use windows with this")
+      _ -> :default
     end
   end
 
