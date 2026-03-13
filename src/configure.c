@@ -48,8 +48,7 @@ set_options(struct termios* const options, uart_config_t const* const config)
 
   options->c_cflag |= config->data_bits;
 
-  if (config->stop_bits == 2)
-    options->c_cflag |= CSTOPB;
+  if (config->stop_bits == 2) { options->c_cflag |= CSTOPB; }
 
   switch (config->parity) {
     case 'N': break;

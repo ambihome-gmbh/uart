@@ -31,13 +31,10 @@ static void
 init_logger()
 {
   const char* log_path = getenv("UART_LOG_PATH");
-  if (log_path == NULL)
-    log_path = "/tmp/uart.log";
+  if (log_path == NULL) { log_path = "/tmp/uart.log"; }
   FILE* f_log = fopen(log_path, "w");
   log_set_quiet(true);
-  if (f_log != NULL) {
-    log_add_fp(f_log, UART_LOG_LEVEL);
-  }
+  if (f_log != NULL) { log_add_fp(f_log, UART_LOG_LEVEL); }
 }
 
 static void
@@ -52,8 +49,7 @@ forward(int const from, int const to, int const err_code)
   while (written < size) {
     ssize_t const n = write(to, buf + written, size - written);
     if (n < 0) {
-      if (errno == EINTR)
-        continue;
+      if (errno == EINTR) { continue; }
       require(false, err_code + ERR_WRITE_ERROR_);
     }
     written += n;
@@ -75,8 +71,7 @@ main(int argc, char* argv[])
     FD_SET(f_uart, &fds);
     FD_SET(STDIN_FILENO, &fds);
 
-    if (select(maxfd, &fds, NULL, NULL, NULL) < 0)
-      continue;
+    if (select(maxfd, &fds, NULL, NULL, NULL) < 0) { continue; }
 
     if (FD_ISSET(f_uart, &fds)) {
       forward(f_uart, STDOUT_FILENO, ERR_FWD_UART_FAILED_);

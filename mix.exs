@@ -6,6 +6,7 @@ defmodule Uart.MixProject do
       app: :uart,
       version: "0.2.0",
       elixir: "~> 1.15",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers(),
       make_env: make_env(),
@@ -38,6 +39,9 @@ defmodule Uart.MixProject do
       {:typed_struct, "~> 0.3.0"}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp make_env, do: %{}
 
