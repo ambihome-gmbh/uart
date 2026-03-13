@@ -14,16 +14,7 @@ defmodule Uart.MixProject do
       make_executable: make_executable(),
       make_makefile: "Makefile",
       dialyzer: dialyzer(),
-      deps: deps(),
-      releases: [
-        uart_ex: [
-          applications: [uart: :permanent],
-          steps: [
-            :assemble
-          ],
-          include_erts: System.get_env("MIX_TARGET_INCLUDE_ERTS")
-        ]
-      ]
+      deps: deps()
     ]
   end
 

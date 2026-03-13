@@ -38,8 +38,7 @@ defmodule Uart do
                  :ERR_FWD_UART_WRITE_FAILED
                ]
                |> Enum.with_index(1)
-               |> Enum.map(fn {k, v} -> {v, k} end)
-               |> Map.new()
+               |> Map.new(fn {k, v} -> {v, k} end)
 
   def start_link(init_arg) do
     {opts, init_arg} = Keyword.split(init_arg, [:name])
@@ -66,12 +65,22 @@ defmodule Uart do
 
   @impl true
   def handle_continue(:start_uart, state) do
-    state |> start_uart()
-  end
+    try do
+      port =
+        Port.open(
+          {:spawn_executable, :code.priv_dir(:uart) ++ ~c"/c/uart"},
+          [:exit_status, :binary, {:args, state.args}]
+        )
 
-  @impl true
-  def handle_info(:start_uart, state) do
-    state |> start_uart()
+      {:noreply, %{state | port: port}}
+    rescue
+      e ->
+        Logger.warning(
+          "failed to open UART on #{inspect(state.args, pretty: true)}: #{inspect(e)}"
+        )
+
+        {:stop, {:shutdown, :cant_open_port}, state}
+    end
   end
 
   @impl true
@@ -85,7 +94,6 @@ defmodule Uart do
     {:noreply, state}
   end
 
-  @impl true
   def handle_info({_port, {:exit_status, exit_status}}, state = %{subscriber: subscriber}) do
     Logger.info("from port: exit_status: #{@exit_status[exit_status]}")
 
@@ -93,9 +101,7 @@ defmodule Uart do
       send(subscriber, {:uart, :exit, hd(state.args), @exit_status[exit_status]})
     end
 
-    Process.send_after(self(), :start_uart, 2000)
-
-    {:noreply, %{state | port: nil}}
+    {:stop, {:shutdown, {:uart_closed, exit_status}}, state}
   end
 
   @impl true
@@ -103,7 +109,6 @@ defmodule Uart do
     {:noreply, state}
   end
 
-  @impl true
   def handle_cast({:write, data}, %{port: port} = state) do
     Port.command(port, data)
     {:noreply, state}
@@ -112,25 +117,5 @@ defmodule Uart do
   @impl true
   def handle_call(:subscribe, {pid, _} = _from, state) do
     {:reply, :ok, %{state | subscriber: pid}}
-  end
-
-  defp start_uart(state) do
-    args = state.args
-
-    try do
-      port =
-        Port.open(
-          {:spawn_executable, :code.priv_dir(:uart) ++ ~c"/c/uart"},
-          [:exit_status, :binary, {:args, args}]
-        )
-
-      {:noreply, %{state | port: port}}
-    rescue
-      e ->
-        Logger.warning("failed to open UART on #{inspect(args, pretty: true)}: #{inspect(e)}")
-        Process.send_after(self(), :start_uart, 2000)
-
-        {:noreply, state}
-    end
   end
 end
